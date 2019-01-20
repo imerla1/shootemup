@@ -3,6 +3,7 @@ import pygame
 from os import path
 import random
 from assets import *
+from highscore import *
 
 pygame.init()
 pygame.mixer.init()
@@ -42,7 +43,7 @@ def draw_scoreboard(surf, x, y, text, size):
     text_surface = font.render(text, True, white)
     text_rect = text_surface.get_rect()
     text_rect.midtop = (x, y)
-    surf.blit(text_surface, text_rect)
+    surf.blit(text_surface,  text_rect)
 
 
 def new_enemy():
@@ -152,18 +153,19 @@ while running:
                 random.choice(las_sound).play()
     # Update
     all_sprites.update()
-    # check to see if bullet hit the Enemy
+    # check to  see if bullet hit the Enemy
     damage = pygame.sprite.groupcollide(enemy_sprites, bullet_sprites, True, True)
     for each_hit in damage:
         if each_hit:
             new_enemy()
         if each_hit:
-            score += Enemy().score_hint
+            score += (Enemy().score_hint + 100)
 
     # check to see if mob hit the player
     hits = pygame.sprite.spritecollide(player, enemy_sprites, False, pygame.sprite.collide_circle)
     for hit in hits:
         if hit:
+            high_score(score)
             running = False
 
     # Draw / render
