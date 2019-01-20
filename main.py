@@ -14,7 +14,27 @@ background_img = pygame.image.load('background.png').convert()
 background_rect = background_img.get_rect()
 
 font_name = pygame.font.match_font('arial')
-player_new_img = pygame.image.load(path.join(img_dir, '???.png')).convert()
+player_new_img = pygame.image.load(path.join(img_dir, 'playerShip1_red.png')).convert()
+enemies = []
+# enemy sprite randomize
+for i in all_enemies:
+    enemy_img = pygame.image.load(path.join(enemy_dir, i)).convert()
+    enemies.append(enemy_img)
+# laser sprite randomize
+lasers = []
+for laser in all_lasers:
+    las = pygame.image.load(path.join(laser_dir, laser)).convert()
+    lasers.append(las)
+
+# sound section
+pygame.mixer.music.load(background_sound)
+pygame.mixer.music.set_volume(1)
+pygame.mixer.music.play(loops=-1)
+# laser sound randomize
+las_sound = []
+for sound in all_laser_sounds:
+    snd = pygame.mixer.Sound(path.join(shoot_dir, sound))
+    las_sound.append(snd)
 
 
 def draw_scoreboard(surf, x, y, text, size):
@@ -34,12 +54,13 @@ def new_enemy():
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.transform.scale(player_new_img, (80, 60))
-        self.image.set_colorkey(white)
+        self.image = pygame.transform.scale(player_new_img, (40, 40))
+
+        self.image.set_colorkey(black)
 
         self.rect = self.image.get_rect()
         self.rect.x = WIDTH / 2
-        self.rect.y = HEIGHT - 50
+        self.rect.y = HEIGHT - 42
         self.speed = 8
 
     def update(self, *args):
@@ -63,8 +84,8 @@ class Player(pygame.sprite.Sprite):
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((30, 30))
-        self.image.fill(blues)
+        self.image = pygame.transform.scale(random.choice(enemies), (30, 30))
+        self.image.set_colorkey(black)
         self.rect = self.image.get_rect()
         self.rect.x = random.randrange(WIDTH - self.rect.width)
         self.rect.y = random.randrange(-100, -40)
@@ -79,13 +100,16 @@ class Enemy(pygame.sprite.Sprite):
             self.speed_x = -self.speed_x
         if self.rect.right <= 0:
             self.speed_x = -self.speed_x
+        if self.rect.top > HEIGHT:
+            self.rect.x = random.randrange(WIDTH - self.rect.width)
+            self.rect.y = random.randrange(-100, -40)
 
 
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((15, 25))
-        self.image.fill(yellow)
+        self.image = pygame.transform.scale(random.choice(lasers), (10, 25))
+
         self.rect = self.image.get_rect()
         self.rect.bottom = y
         self.rect.centerx = x
@@ -125,6 +149,7 @@ while running:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 player.shoot()
+                random.choice(las_sound).play()
     # Update
     all_sprites.update()
     # check to see if bullet hit the Enemy
@@ -136,10 +161,9 @@ while running:
             score += Enemy().score_hint
 
     # check to see if mob hit the player
-    hits = pygame.sprite.spritecollide(player, enemy_sprites, False)
+    hits = pygame.sprite.spritecollide(player, enemy_sprites, False, pygame.sprite.collide_circle)
     for hit in hits:
         if hit:
-
             running = False
 
     # Draw / render
@@ -152,6 +176,8 @@ while running:
     pygame.display.flip()
 
 pygame.quit()
+
+
 
 
 
