@@ -4,7 +4,6 @@ def high_score(result):
 
 
 high_score(0)
-
 hg_lst = []
 with open('high_score', 'r') as file:
     c = file.read()
@@ -19,21 +18,17 @@ for each in hg_lst:
     except (ValueError, Exception):
         pass
 
-final_list = []
-comp = [final_list.append(c) for c in new_list if c not in final_list]
-work_list = []
+
+def remove_duplicates(lst):
+    hg = []
+    for k in lst:
+        if k not in hg:
+            hg.append(k)
+
+    return hg
 
 
-counter = 0
-while counter < 10:
-
-    for item in reversed(final_list):
-        counter += 1
-        work_list.append(item)
-
-
-high_scores = work_list[0:10]  # this should use in main.py
-print(sorted(high_scores, reverse=True))
-
+x = remove_duplicates(new_list)
+fhg = sorted(x[0:10], reverse=True) # this must be used in main.py
 
 
