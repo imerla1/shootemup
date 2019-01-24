@@ -5,6 +5,7 @@ import random
 from assets import *
 from highscore import *
 
+
 pygame.init()
 pygame.mixer.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -13,6 +14,18 @@ clock = pygame.time.Clock()
 score = 0
 background_img = pygame.image.load('background.png').convert()
 background_rect = background_img.get_rect()
+
+
+def draw_shield_bar(surf, x, y, pct):
+    if pct < 0:
+        pct = 0
+    bar_len = 100
+    bar_height = 10
+    fill = (pct / 100) * bar_len
+    outline_rect = pygame.Rect(x, y, bar_len, bar_height)
+    fill_rect = pygame.Rect(x, y, fill, bar_height)
+    pygame.draw.rect(surf, green, fill_rect)
+    pygame.draw.rect(surf, white, outline_rect, 2)
 
 
 font_name = pygame.font.match_font('arial')
@@ -34,9 +47,11 @@ for item in listdir(explosion_dir):
     exp.append(new_img)
 
 
-# sound section
+# sound section ----
+
+# background sound
 pygame.mixer.music.load(background_sound)
-pygame.mixer.music.set_volume(0)
+pygame.mixer.music.set_volume(0.2)
 pygame.mixer.music.play(loops=-1)
 # laser sound randomize
 las_sound = []
@@ -44,8 +59,8 @@ for sound in all_laser_sounds:
     snd = pygame.mixer.Sound(path.join(shoot_dir, sound))
     las_sound.append(snd)
 
-
-
+# critical sound
+critical_sound = pygame.mixer.Sound(critical_dir)
 
 
 def draw_scoreboard(surf, x, y, text, size):
@@ -73,6 +88,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.x = WIDTH / 2
         self.rect.y = HEIGHT - 42
         self.speed = 8
+        self.shield = 100
 
     def update(self, *args):
         key_press = pygame.key.get_pressed()
@@ -164,10 +180,6 @@ class Explosion(pygame.sprite.Sprite):
             pass
 
 
-
-
-
-
 # sprite Groups
 all_sprites = pygame.sprite.Group()
 enemy_sprites = pygame.sprite.Group()
@@ -178,9 +190,6 @@ bullet_sprites = pygame.sprite.Group()
 player = Player()
 all_sprites.add(player)
 player_sprites.add(player)
-
-#expl = Explosion()
-#all_sprites.add(expl)
 
 
 for i in range(8):
@@ -213,14 +222,24 @@ while running:
             all_sprites.add(explosion)
 
     # check to see if mob hit the player
-    hits = pygame.sprite.spritecollide(player, enemy_sprites, False, pygame.sprite.collide_circle)
+    hits = pygame.sprite.spritecollide(player, enemy_sprites, True, pygame.sprite.collide_circle)
     for hit in hits:
-        if hit:
-            high_score(score)
+
+        new_enemy()
+        high_score(score)
+        k = random.randint(10, 25)
+        player.shield -= k
+        if k > 20:  # if damage > 20 critical sound will play (Phantom assassin Ult)
+            critical_sound.play()
+
+        print('damge is {}\n curr life {}'.format(k, player.shield))
+        if player.shield <= 0:
+            running = False
 
     # Draw / render
     screen.fill(black)
     screen.blit(background_img, background_rect)
+    draw_shield_bar(screen, 10, 10, player.shield)
     all_sprites.draw(screen)
     draw_scoreboard(screen, WIDTH/2, 10, str(score), 15)
 
@@ -228,6 +247,13 @@ while running:
     pygame.display.flip()
 
 pygame.quit()
+
+
+
+
+
+
+
 
 
 
