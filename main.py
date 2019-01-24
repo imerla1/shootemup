@@ -14,6 +14,7 @@ score = 0
 background_img = pygame.image.load('background.png').convert()
 background_rect = background_img.get_rect()
 
+
 font_name = pygame.font.match_font('arial')
 player_new_img = pygame.image.load(path.join(img_dir, 'playerShip1_red.png')).convert()
 enemies = []
@@ -26,16 +27,25 @@ lasers = []
 for laser in all_lasers:
     las = pygame.image.load(path.join(laser_dir, laser)).convert()
     lasers.append(las)
+# explosion animation
+exp = []  # all explosions list
+for item in listdir(explosion_dir):
+    new_img = pygame.image.load(path.join(explosion_dir, item)).convert()
+    exp.append(new_img)
+
 
 # sound section
 pygame.mixer.music.load(background_sound)
-pygame.mixer.music.set_volume(1)
+pygame.mixer.music.set_volume(0)
 pygame.mixer.music.play(loops=-1)
 # laser sound randomize
 las_sound = []
 for sound in all_laser_sounds:
     snd = pygame.mixer.Sound(path.join(shoot_dir, sound))
     las_sound.append(snd)
+
+
+
 
 
 def draw_scoreboard(surf, x, y, text, size):
@@ -124,6 +134,40 @@ class Bullet(pygame.sprite.Sprite):
             self.kill()
 
 
+class Explosion(pygame.sprite.Sprite):
+    def __init__(self, anim_x, anim_y):
+        pygame.sprite.Sprite.__init__(self)
+
+        self.n = 0
+        self.image = pygame.transform.scale(exp[self.n], (60, 60))
+        self.image.set_colorkey(black)
+        self.rect = self.image.get_rect()
+        self.rect.x = anim_x
+        self.rect.y = anim_y
+        self.frame = 0
+        self.last_update = pygame.time.get_ticks()
+        self.frame_rate = 60
+
+    def update(self, *args):
+
+        try:
+            now = pygame.time.get_ticks()
+            if now - self.last_update > self.frame_rate:
+                self.last_update = now
+                self.frame += 1
+                self.n += 1
+                self.image = pygame.transform.scale(exp[self.n], (60, 60))
+                self.image.set_colorkey(black)
+            if self.frame == len(exp):
+                self.kill()
+        except IndexError:
+            pass
+
+
+
+
+
+
 # sprite Groups
 all_sprites = pygame.sprite.Group()
 enemy_sprites = pygame.sprite.Group()
@@ -134,6 +178,10 @@ bullet_sprites = pygame.sprite.Group()
 player = Player()
 all_sprites.add(player)
 player_sprites.add(player)
+
+#expl = Explosion()
+#all_sprites.add(expl)
+
 
 for i in range(8):
     new_enemy()
@@ -160,13 +208,15 @@ while running:
             new_enemy()
         if each_hit:
             score += (Enemy().score_hint + 100)
+        if each_hit:
+            explosion = Explosion(each_hit.rect.x, each_hit.rect.y)
+            all_sprites.add(explosion)
 
     # check to see if mob hit the player
     hits = pygame.sprite.spritecollide(player, enemy_sprites, False, pygame.sprite.collide_circle)
     for hit in hits:
         if hit:
             high_score(score)
-            running = False
 
     # Draw / render
     screen.fill(black)
@@ -178,6 +228,16 @@ while running:
     pygame.display.flip()
 
 pygame.quit()
+
+
+
+
+
+
+
+
+
+
 
 
 
