@@ -45,7 +45,12 @@ exp = []  # all explosions list
 for item in listdir(explosion_dir):
     new_img = pygame.image.load(path.join(explosion_dir, item)).convert()
     exp.append(new_img)
+# Power_ups ----
+powers = []
 
+for item in listdir(power_ups):
+    img = pygame.image.load(path.join(power_ups, item)).convert()
+    powers.append(img)
 
 # sound section ----
 
@@ -89,6 +94,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.y = HEIGHT - 42
         self.speed = 8
         self.shield = 100
+        self.bullets = False
 
     def update(self, *args):
         key_press = pygame.key.get_pressed()
@@ -180,11 +186,27 @@ class Explosion(pygame.sprite.Sprite):
             pass
 
 
+class PowerUps(pygame.sprite.Sprite):
+    def __init__(self, pow_x, pow_y):
+        pygame.sprite.Sprite.__init__(self)
+        self.type = random.choice(['shield', 'bolt'])
+        self.image = pygame.transform.scale(random.choice(powers), (30, 30))
+        self.image.set_colorkey(black)
+        self.rect = self.image.get_rect()
+        self.rect.x = pow_x
+        self.rect.y = pow_y
+        self.speed = random.randint(7, 10)
+
+    def update(self, *args):
+        self.rect.y += self.speed
+
+
 # sprite Groups
 all_sprites = pygame.sprite.Group()
 enemy_sprites = pygame.sprite.Group()
 player_sprites = pygame.sprite.Group()
 bullet_sprites = pygame.sprite.Group()
+PowerUp_sprites = pygame.sprite.Group()
 
 
 player = Player()
@@ -220,6 +242,10 @@ while running:
         if each_hit:
             explosion = Explosion(each_hit.rect.x, each_hit.rect.y)
             all_sprites.add(explosion)
+        if random.randint(1, 2) == 1:
+            pow_up = PowerUps(each_hit.rect.x, each_hit.rect.y)
+            all_sprites.add(pow_up)
+            PowerUp_sprites.add(pow_up)
 
     # check to see if mob hit the player
     hits = pygame.sprite.spritecollide(player, enemy_sprites, True, pygame.sprite.collide_circle)
@@ -232,9 +258,11 @@ while running:
         if k > 20:  # if damage > 20 critical sound will play (Phantom assassin Ult)
             critical_sound.play()
 
-        print('damge is {}\n curr life {}'.format(k, player.shield))
+        print('damage is {}\ncurr life {}'.format(k, player.shield))
         if player.shield <= 0:
-            running = False
+            pass
+    # check to see if powerUp hit the player
+    pow_ = pygame.sprite.spritecollide(player, PowerUp_sprites, True)
 
     # Draw / render
     screen.fill(black)
@@ -247,6 +275,9 @@ while running:
     pygame.display.flip()
 
 pygame.quit()
+
+
+
 
 
 
