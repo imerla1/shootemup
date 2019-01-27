@@ -14,6 +14,19 @@ score = 0
 background_img = pygame.image.load('background.png').convert()
 background_rect = background_img.get_rect()
 bullet_lvl_down_counter = 50000
+life = pygame.image.load(lives_dir).convert()
+life.set_colorkey(black
+                  )
+
+
+def draw_lives(surf, x_pos, y_pos, lives, lives_image):
+    dist = 0
+    for live in range(lives):
+        img_rect = lives_image.get_rect()
+
+        img_rect.x = x_pos + 35 * live
+        img_rect.y = y_pos
+        surf.blit(lives_image, img_rect)
 
 
 def draw_shield_bar(surf, x, y, pct):
@@ -96,11 +109,11 @@ class Player(pygame.sprite.Sprite):
         self.shield = 100
         self.bullet_level = 1
         self.last_update = pygame.time.get_ticks()
+        self.life = 3
 
     def update(self, *args):
         now = pygame.time.get_ticks()
         if now - self.last_update >= bullet_lvl_down_counter:
-
             self.last_update = now
             self.bullet_level -= 1
         if self.bullet_level <= 1:
@@ -290,7 +303,8 @@ while running:
 
         print('damage is {}\ncurr life {}'.format(k, player.shield))
         if player.shield <= 0:
-            pass
+            player.life -= 1
+            player.shield = 100
     # check to see if powerUp hit the player
     pow_ = pygame.sprite.spritecollide(player, PowerUp_sprites, True)
     for each_power in pow_:
@@ -306,6 +320,7 @@ while running:
     draw_shield_bar(screen, 10, 10, player.shield)
     all_sprites.draw(screen)
     draw_scoreboard(screen, WIDTH / 2, 10, str(score), 15)
+    draw_lives(screen, WIDTH - 123, 15, player.life, pygame.transform.scale(life, (25, 25)))
 
     # After drawing everything
     pygame.display.flip()
