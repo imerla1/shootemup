@@ -14,13 +14,14 @@ score = 0
 background_img = pygame.image.load('background.png').convert()
 background_rect = background_img.get_rect()
 bullet_lvl_down_counter = 50000
-life = pygame.image.load(lives_dir).convert()
-life.set_colorkey(black
-                  )
+hide_timer = 5000
+
+life = pygame.image.load(pro).convert()
+life.set_colorkey(black)
+snde = pygame.mixer.Sound(boss_sound)
 
 
 def draw_lives(surf, x_pos, y_pos, lives, lives_image):
-    dist = 0
     for live in range(lives):
         img_rect = lives_image.get_rect()
 
@@ -179,6 +180,13 @@ class Enemy(pygame.sprite.Sprite):
         if self.rect.top > HEIGHT:
             self.rect.x = random.randrange(WIDTH - self.rect.width)
             self.rect.y = random.randrange(-100, -40)
+        if score > 200:
+            self.kill()
+            boss = Boss()
+            all_sprites.add(boss)
+            snde.set_volume(0.05)
+            snde.play()
+            pygame.mixer.music.stop()
 
 
 class Bullet(pygame.sprite.Sprite):
@@ -245,12 +253,56 @@ class PowerUps(pygame.sprite.Sprite):
         self.rect.y += self.speed
 
 
+class Boss(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load(boss_dir).convert()
+        self.image.set_colorkey(black)
+        self.rect = self.image.get_rect()
+        self.rect.centerx = WIDTH / 2
+        self.rect.centery = -150
+        self.damage = random.randint(15, 45)
+        self.hp = 1000
+        self.speed = 5
+        self.last_update = pygame.time.get_ticks()
+
+    def update(self, *args):  # Todo Movement algorithm
+        self.rect.y += self.speed
+        """if self.rect.y > HEIGHT / 2:
+            self.speed = 0
+            self.rect.x += 5"""
+        self.movement()
+
+    def hide(self):
+        now = pygame.time.get_ticks()
+        if random.random() > 0.99:
+            self.rect.x = -100
+            self.rect.y = HEIGHT + 500
+        if now - self.last_update > hide_timer:
+            self.rect.x = WIDTH / 2
+            self.rect.y = 120
+            self.last_update = now
+
+    def movement(self):
+        if self.rect.y > HEIGHT / 2:
+            self.speed = 0
+            self.rect.x += 5
+            bul = Bullet(self.rect.x, self.rect.y)
+            all_sprites.add(bul)
+            if self.rect.right > WIDTH + 40:
+                self.rect.x = -40
+            if self.rect.left < -40:
+                self.rect.x = WIDTH
+
+
 # sprite Groups
 all_sprites = pygame.sprite.Group()
 enemy_sprites = pygame.sprite.Group()
 player_sprites = pygame.sprite.Group()
 bullet_sprites = pygame.sprite.Group()
 PowerUp_sprites = pygame.sprite.Group()
+if score > 2000:
+    print(123)  #
 
 player = Player()
 all_sprites.add(player)
@@ -261,7 +313,6 @@ for i in range(8):
 
 running = True
 
-# Game loop
 while running:
 
     clock.tick(fps)
@@ -280,6 +331,7 @@ while running:
     for each_hit in damage:
         if each_hit:
             new_enemy()
+
         if each_hit:
             score += (Enemy().score_hint + 100)
         if each_hit:
@@ -301,7 +353,6 @@ while running:
         if k > 20:  # if damage > 20 critical sound will play (Phantom assassin Ult)
             critical_sound.play()
 
-        print('damage is {}\ncurr life {}'.format(k, player.shield))
         if player.shield <= 0:
             player.life -= 1
             player.shield = 100
@@ -321,7 +372,7 @@ while running:
     all_sprites.draw(screen)
     draw_scoreboard(screen, WIDTH / 2, 10, str(score), 15)
     draw_lives(screen, WIDTH - 123, 15, player.life, pygame.transform.scale(life, (25, 25)))
-
+    # check_score(score)
     # After drawing everything
     pygame.display.flip()
 
